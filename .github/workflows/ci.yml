@@ -32,6 +32,11 @@ jobs:
         with:
           terraform_version: latest
 
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
       - name: Terraform init
         run: |
           cd terraform
@@ -78,6 +83,11 @@ jobs:
         uses: hashicorp/setup-terraform@v2
         with:
           terraform_version: latest
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Download plan artifact
         uses: actions/download-artifact@v4
