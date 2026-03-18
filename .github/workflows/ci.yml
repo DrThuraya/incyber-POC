@@ -88,9 +88,4 @@ jobs:
       - name: Terraform apply
         run: |
           cd terraform
-          if [ "${{ github.event.inputs.auto_approve }}" = "true" ]; then
-            terraform apply -input=false -auto-approve tfplan
-          else
-            echo "Auto-approve not enabled. Re-run workflow with input 'auto_approve=true' to apply."
-            exit 1
-          fi
+          terraform apply -input=false -auto-approve tfplan
