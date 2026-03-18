@@ -84,10 +84,13 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+      - name: Terraform init (apply)
+        run: terraform init -input=false -upgrade
+        working-directory: terraform
+
       - name: Terraform plan (recreate)
-        run: |
-          cd terraform
-          terraform plan -no-color -out=tfplan
+        run: terraform plan -no-color -out=tfplan
+        working-directory: terraform
 
       - name: Terraform apply
         run: |
