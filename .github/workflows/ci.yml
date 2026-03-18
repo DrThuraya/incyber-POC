@@ -38,16 +38,11 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Terraform init
-        run: |
-          cd terraform
-          terraform init -input=false
+        run: terraform init -input=false -upgrade
+        working-directory: terraform
 
       - name: Terraform fmt (check)
         run: terraform fmt -check -recursive
-        working-directory: terraform
-
-      - name: Terraform init
-        run: terraform init -input=false
         working-directory: terraform
 
       - name: Terraform validate
