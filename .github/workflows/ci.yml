@@ -92,10 +92,6 @@ jobs:
           name: tfplan
           path: terraform/environments/dev
 
-      - name: Restore Terraform lock file
-        run: |
-          cp terraform/environments/dev/.terraform.lock.hcl terraform/environments/dev/.terraform.lock.hcl
-        working-directory: terraform/environments/dev
 
       - name: Terraform Apply
         run: terraform apply -var-file="terraform.tfvars" -input=false -auto-approve tfplan
