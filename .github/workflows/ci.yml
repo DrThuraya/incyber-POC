@@ -40,6 +40,9 @@ jobs:
       - name: Check files
         run: ls -l terraform/environments/dev
 
+        - name: Clean lock file
+          run: rm -f .terraform.lock.hcl
+          working-directory: terraform/environments/dev
       - name: Terraform Init
         run: terraform init -input=false -upgrade
         working-directory: terraform/environments/dev
@@ -85,6 +88,9 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+        - name: Clean lock file (apply)
+          run: rm -f .terraform.lock.hcl
+          working-directory: terraform/environments/dev
       - name: Download plan artifact
         uses: actions/download-artifact@v4
         with:
