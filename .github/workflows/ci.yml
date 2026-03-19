@@ -53,19 +53,6 @@ jobs:
         run: terraform plan -var-file="terraform.tfvars" -no-color -out=tfplan
         working-directory: terraform/environments/dev
 
-      # --- Upload artifacts for apply job ---
-      - name: Upload Plan Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: terraform/environments/dev/tfplan
-
-      - name: Upload Terraform Lock file
-        uses: actions/upload-artifact@v4
-        with:
-          name: terraform-lock
-          path: terraform/environments/dev/.terraform.lock.hcl
-
   apply:
     name: Terraform Apply
     needs: terraform
@@ -88,19 +75,10 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      # --- Download artifacts from plan job ---
-      - name: Download Plan Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
-          path: terraform/environments/dev
-
-      - name: Download Terraform Lock file
-        uses: actions/download-artifact@v4
-        with:
-          name: terraform-lock
-          path: terraform/environments/dev
+      - name: Terraform Init
+        run: terraform init -input=false -upgrade
+        working-directory: terraform/environments/dev
 
       - name: Terraform Apply
-        run: terraform apply -var-file="terraform.tfvars" -input=false -auto-approve tfplan
+        run: terraform apply -var-file="terraform.tfvars" -input=false -auto-approve
         working-directory: terraform/environments/dev
