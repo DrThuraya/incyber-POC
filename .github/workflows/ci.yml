@@ -23,7 +23,6 @@ jobs:
     defaults:
       run:
         shell: bash
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,6 +36,9 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Check files
+        run: ls -l terraform/environments/dev
 
       - name: Terraform Init
         run: terraform init -input=false -upgrade
@@ -71,7 +73,6 @@ jobs:
       run:
         shell: bash
     environment: ${{ github.event.inputs.environment }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -91,11 +92,6 @@ jobs:
         with:
           name: tfplan
           path: terraform/environments/dev
-
-      # 🔥 AJOUT CRITIQUE (manquait chez toi)
-      - name: Terraform Init (apply)
-        run: terraform init -input=false -upgrade
-        working-directory: terraform/environments/dev
 
       - name: Terraform Apply
         run: terraform apply -var-file="terraform.tfvars" -input=false -auto-approve tfplan
