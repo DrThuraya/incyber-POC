@@ -1,9 +1,9 @@
 terraform {
   backend "azurerm" {
-    resource_group_name  = "incyberpoc"   # le RG où est ton Storage Account
+    resource_group_name  = "incyberpoc" # le RG où est ton Storage Account
     storage_account_name = "statestoragee"
     container_name       = "tfstate"
-    key                  = "dev.terraform.tfstate"  # nom du fichier state
+    key                  = "dev.terraform.tfstate" # nom du fichier state
   }
 
 }
