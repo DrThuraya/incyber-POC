@@ -18,7 +18,7 @@ on:
 
 jobs:
   terraform:
-    name: Terraform CI
+    name: Terraform Plan
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -37,9 +37,6 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Check files
-        run: ls -l terraform/environments/dev
-
       - name: Terraform Init
         run: terraform init -input=false -upgrade
         working-directory: terraform/environments/dev
@@ -48,7 +45,7 @@ jobs:
         run: terraform fmt -check -recursive
         working-directory: terraform/environments/dev
 
-      - name: Terraform validate
+      - name: Terraform Validate
         run: terraform validate
         working-directory: terraform/environments/dev
 
@@ -56,13 +53,18 @@ jobs:
         run: terraform plan -var-file="terraform.tfvars" -no-color -out=tfplan
         working-directory: terraform/environments/dev
 
-      - name: Upload plan artifact
+      # --- Upload artifacts for apply job ---
+      - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: |
-            terraform/environments/dev/tfplan
-            terraform/environments/dev/.terraform.lock.hcl
+          path: terraform/environments/dev/tfplan
+
+      - name: Upload Terraform Lock file
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-lock
+          path: terraform/environments/dev/.terraform.lock.hcl
 
   apply:
     name: Terraform Apply
@@ -86,12 +88,18 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Download plan artifact
+      # --- Download artifacts from plan job ---
+      - name: Download Plan Artifact
         uses: actions/download-artifact@v4
         with:
           name: tfplan
           path: terraform/environments/dev
 
+      - name: Download Terraform Lock file
+        uses: actions/download-artifact@v4
+        with:
+          name: terraform-lock
+          path: terraform/environments/dev
 
       - name: Terraform Apply
         run: terraform apply -var-file="terraform.tfvars" -input=false -auto-approve tfplan
