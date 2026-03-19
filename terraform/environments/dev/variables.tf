@@ -13,3 +13,12 @@ variable "admin_password" {
   type        = string
   sensitive   = true
 }
+variable "admin_username" {
+  description = "Nom de l'administrateur pour la VM"
+  type        = string
+}
+
+variable "rdp_source_address_prefix" {
+  description = "CIDR source autorisé pour les connexions RDP (limiter en production)"
+  type        = string
+}

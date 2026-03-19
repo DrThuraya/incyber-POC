@@ -1,3 +1,16 @@
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "incyberpoc"   # le RG où est ton Storage Account
+    storage_account_name = "statestoragee"
+    container_name       = "tfstate"
+    key                  = "dev.terraform.tfstate"  # nom du fichier state
+  }
+
+}
+provider "azurerm" {
+  features {}
+}
+
 module "network" {
   source              = "../../modules/network"
   location            = var.location

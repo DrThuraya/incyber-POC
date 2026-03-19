@@ -1,12 +1,4 @@
-variable "location" {
-  description = "Azure region"
-  type        = string
-}
 
-variable "resource_group_name" {
-  description = "Nom du Resource Group"
-  type        = string
-}
 
 # Resource Group
 resource "azurerm_resource_group" "rg" {
@@ -62,7 +54,7 @@ resource "azurerm_network_interface" "nic" {
     public_ip_address_id          = azurerm_public_ip.vm_public_ip.id
   }
 
-  network_security_group_id = azurerm_network_security_group.nsg.id
+  # network_security_group_id supprimé (non supporté)
 }
 
 # Public IP pour RDP (vulnérable)

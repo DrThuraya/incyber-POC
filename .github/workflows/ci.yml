@@ -23,6 +23,7 @@ jobs:
     defaults:
       run:
         shell: bash
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -37,27 +38,27 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Terraform init
+      - name: Terraform Init
         run: terraform init -input=false -upgrade
-        working-directory: terraform
+        working-directory: terraform/environments/dev
 
       - name: Terraform fmt (check)
         run: terraform fmt -check -recursive
-        working-directory: terraform
+        working-directory: terraform/environments/dev
 
       - name: Terraform validate
         run: terraform validate
-        working-directory: terraform
+        working-directory: terraform/environments/dev
 
-      - name: Terraform plan
-        run: terraform plan -no-color -out=tfplan
-        working-directory: terraform
+      - name: Terraform Plan
+        run: terraform plan -var-file="terraform.tfvars" -no-color -out=tfplan
+        working-directory: terraform/environments/dev
 
       - name: Upload plan artifact
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: terraform/tfplan
+          path: terraform/environments/dev/tfplan
 
   apply:
     name: Terraform Apply
@@ -70,6 +71,7 @@ jobs:
       run:
         shell: bash
     environment: ${{ github.event.inputs.environment }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -84,15 +86,17 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Terraform init (apply)
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/environments/dev
+
+      # 🔥 AJOUT CRITIQUE (manquait chez toi)
+      - name: Terraform Init (apply)
         run: terraform init -input=false -upgrade
-        working-directory: terraform
+        working-directory: terraform/environments/dev
 
-      - name: Terraform plan (recreate)
-        run: terraform plan -no-color -out=tfplan
-        working-directory: terraform
-
-      - name: Terraform apply
-        run: |
-          cd terraform
-          terraform apply -input=false -auto-approve tfplan
+      - name: Terraform Apply
+        run: terraform apply -var-file="terraform.tfvars" -input=false -auto-approve tfplan
+        working-directory: terraform/environments/dev
