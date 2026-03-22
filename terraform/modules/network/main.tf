@@ -57,7 +57,13 @@ resource "azurerm_network_interface" "nic" {
   # network_security_group_id supprimé (non supporté)
 }
 
-# Public IP pour RDP (vulnérable)
+# Association NSG au subnet
+resource "azurerm_subnet_network_security_group_association" "frontend_nsg" {
+  subnet_id                 = azurerm_subnet.frontend.id
+  network_security_group_id = azurerm_network_security_group.nsg.id
+}
+
+# Public IP pour RDP
 resource "azurerm_public_ip" "vm_public_ip" {
   name                = "pip-incyber"
   location            = var.location

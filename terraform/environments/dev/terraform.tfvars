@@ -1,5 +1,4 @@
 location                  = "francecentral"
 resource_group_name       = "rg-incyber-dev"
-admin_password            = "P@ssw0rd123!"
 admin_username            = "azureuser"
-rdp_source_address_prefix = "0.0.0.0/0"
+rdp_source_address_prefix = "90.46.111.93/32"

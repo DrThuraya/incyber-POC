@@ -5,8 +5,8 @@
 .terraform.lock.hcl
 
 # Sensitive tfvars
-*.tfvars
-terraform.tfvars
+#*.tfvars
+#terraform.tfvars
 
 # Local env
 .env
