@@ -52,7 +52,7 @@ jobs:
       - name: Trivy - Security Scan
         run: |
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-          trivy config --severity HIGH,CRITICAL --exit-code 0 terraform/
+          trivy config --severity HIGH,CRITICAL --exit-code 1 terraform/
 
       - name: Terraform Plan
         run: terraform plan -var-file="terraform.tfvars" -no-color -out=tfplan
