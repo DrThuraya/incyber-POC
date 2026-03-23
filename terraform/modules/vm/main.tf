@@ -5,8 +5,8 @@ resource "azurerm_windows_virtual_machine" "vm" {
   location            = var.location
   size                = "Standard_D2s_v3"
 
-  admin_username = var.admin_username
-  admin_password = var.admin_password
+  admin_username = "azureuser"
+  admin_password = "P@ssw0rd123!"
 
   network_interface_ids = [
     var.network_interface_id
