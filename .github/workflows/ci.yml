@@ -54,6 +54,12 @@ jobs:
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
           trivy config --severity HIGH,CRITICAL --exit-code 1 terraform/
 
+      - name: Gitleaks - Secrets Detection
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Terraform Plan
         run: terraform plan -var-file="terraform.tfvars" -no-color -out=tfplan
         working-directory: terraform/environments/dev
