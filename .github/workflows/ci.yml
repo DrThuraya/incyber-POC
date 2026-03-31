@@ -69,12 +69,13 @@ jobs:
         working-directory: terraform/environments/${{ github.event.inputs.environment || 'dev' }}
 
       - name: Trivy - Security Scan
-        uses: aquasecurity/trivy-action@0.30.0
-        with:
-          scan-type: 'config'
-          scan-ref: 'terraform/'
-          severity: 'HIGH,CRITICAL'
-          exit-code: '1'
+        run: |
+          sudo apt-get install -y wget apt-transport-https gnupg lsb-release
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | gpg --dearmor | sudo tee /usr/share/keyrings/trivy.gpg > /dev/null
+          echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
+          sudo apt-get install -y trivy
+          trivy config --severity HIGH,CRITICAL --exit-code 1 terraform/
 
       - name: Gitleaks - Secrets Detection
         uses: gitleaks/gitleaks-action@v2
