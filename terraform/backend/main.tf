@@ -16,6 +16,11 @@ resource "azurerm_storage_account" "tfstate_sa" {
   location                 = azurerm_resource_group.tfstate_rg.location
   account_tier             = "Standard"
   account_replication_type = "LRS"
+
+  network_rules {
+    default_action = "Deny"
+    bypass         = ["AzureServices"]
+  }
 }
 
 # Container blob pour stocker le state
