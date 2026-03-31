@@ -87,8 +87,12 @@ jobs:
 
       # Plus de TF_VAR_admin_password — le mot de passe est généré
       # automatiquement par le module keyvault (random_password + Key Vault)
+      - name: Get Runner IP
+        id: runner-ip
+        run: echo "ip=$(curl -s https://api.ipify.org)" >> $GITHUB_OUTPUT
+
       - name: Terraform Plan
-        run: terraform plan -var-file="terraform.tfvars" -no-color -out=tfplan
+        run: terraform plan -var-file="terraform.tfvars" -var="runner_ip=${{ steps.runner-ip.outputs.ip }}" -no-color -out=tfplan
         working-directory: terraform/environments/${{ github.event.inputs.environment || 'dev' }}
 
       - name: Upload Plan
@@ -140,7 +144,11 @@ jobs:
           name: tfplan-${{ github.event.inputs.environment }}
           path: terraform/environments/${{ github.event.inputs.environment }}
 
-      # Applique le plan exact (pas de re-planification)
+      - name: Get Runner IP
+        id: runner-ip
+        run: echo "ip=$(curl -s https://api.ipify.org)" >> $GITHUB_OUTPUT
+
+      # Re-plan et apply avec l'IP du runner pour accès Key Vault
       - name: Terraform Apply
-        run: terraform apply -input=false tfplan
+        run: terraform apply -var-file="terraform.tfvars" -var="runner_ip=${{ steps.runner-ip.outputs.ip }}" -input=false -auto-approve
         working-directory: terraform/environments/${{ github.event.inputs.environment }}
