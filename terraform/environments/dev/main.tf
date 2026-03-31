@@ -1,20 +1,28 @@
 terraform {
   backend "azurerm" {
-    resource_group_name  = "incyberpoc" # le RG où est ton Storage Account
+    resource_group_name  = "incyberpoc"
     storage_account_name = "statestoragee"
     container_name       = "tfstate"
-    key                  = "dev.terraform.tfstate" # nom du fichier state
+    key                  = "dev.terraform.tfstate"
   }
-
 }
+
 provider "azurerm" {
   features {}
 }
 
 module "network" {
-  source              = "../../modules/network"
+  source                    = "../../modules/network"
+  location                  = var.location
+  resource_group_name       = var.resource_group_name
+  rdp_source_address_prefix = var.rdp_source_address_prefix
+}
+
+module "keyvault" {
+  source              = "../../modules/keyvault"
   location            = var.location
   resource_group_name = var.resource_group_name
+  key_vault_name      = "kv-incyber-${var.environment}"
 }
 
 module "vm" {
@@ -22,6 +30,6 @@ module "vm" {
   location             = var.location
   resource_group_name  = var.resource_group_name
   network_interface_id = module.network.nic_id
-  admin_password       = var.admin_password
-  admin_username       = "azureuser"
+  admin_password       = module.keyvault.admin_password
+  admin_username       = var.admin_username
 }

@@ -16,10 +16,26 @@ on:
         required: false
         default: 'false'
 
+# Principe du moindre privilège
+permissions:
+  contents: read
+  id-token: write # Requis pour OIDC Azure
+
+# Empêche les exécutions concurrentes sur le même environnement
+concurrency:
+  group: terraform-${{ github.event.inputs.environment || 'dev' }}
+  cancel-in-progress: false
+
 jobs:
   terraform:
     name: Terraform Plan
     runs-on: ubuntu-latest
+    env:
+      # OIDC pour le provider azurerm (aucun secret stocké)
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: "true"
     defaults:
       run:
         shell: bash
@@ -28,31 +44,37 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: latest
+          terraform_version: 1.7.9
 
-      - name: Azure Login
-        uses: azure/login@v1
+      # Authentification OIDC — aucun secret, juste des identifiants publics
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: terraform init -input=false -upgrade
-        working-directory: terraform/environments/dev
+        working-directory: terraform/environments/${{ github.event.inputs.environment || 'dev' }}
 
       - name: Terraform fmt (check)
         run: terraform fmt -check -recursive
-        working-directory: terraform/environments/dev
+        working-directory: terraform/
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: terraform/environments/dev
+        working-directory: terraform/environments/${{ github.event.inputs.environment || 'dev' }}
 
       - name: Trivy - Security Scan
-        run: |
-          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-          trivy config --severity HIGH,CRITICAL --exit-code 0 terraform/
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: 'config'
+          scan-ref: 'terraform/'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
 
       - name: Gitleaks - Secrets Detection
         uses: gitleaks/gitleaks-action@v2
@@ -60,16 +82,30 @@ jobs:
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # Plus de TF_VAR_admin_password — le mot de passe est généré
+      # automatiquement par le module keyvault (random_password + Key Vault)
       - name: Terraform Plan
         run: terraform plan -var-file="terraform.tfvars" -no-color -out=tfplan
-        working-directory: terraform/environments/dev
-        env:
-          TF_VAR_admin_password: ${{ secrets.VM_ADMIN_PASSWORD }}
+        working-directory: terraform/environments/${{ github.event.inputs.environment || 'dev' }}
+
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan-${{ github.event.inputs.environment || 'dev' }}
+          path: terraform/environments/${{ github.event.inputs.environment || 'dev' }}/tfplan
+          retention-days: 5
 
   apply:
     name: Terraform Apply
+    # Ne s'exécute que sur workflow_dispatch avec auto_approve=true
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.auto_approve == 'true'
     needs: terraform
     runs-on: ubuntu-latest
+    env:
+      ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      ARM_USE_OIDC: "true"
     defaults:
       run:
         shell: bash
@@ -79,21 +115,29 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v2
+        uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: latest
+          terraform_version: 1.7.9
 
-      - name: Azure Login
-        uses: azure/login@v1
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
       - name: Terraform Init
         run: terraform init -input=false -upgrade
-        working-directory: terraform/environments/dev
+        working-directory: terraform/environments/${{ github.event.inputs.environment }}
 
+      # Télécharge le plan exact généré par le job terraform
+      - name: Download Plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan-${{ github.event.inputs.environment }}
+          path: terraform/environments/${{ github.event.inputs.environment }}
+
+      # Applique le plan exact (pas de re-planification)
       - name: Terraform Apply
-        run: terraform apply -var-file="terraform.tfvars" -input=false -auto-approve
-        working-directory: terraform/environments/dev
-        env:
-          TF_VAR_admin_password: ${{ secrets.VM_ADMIN_PASSWORD }}
+        run: terraform apply -input=false tfplan
+        working-directory: terraform/environments/${{ github.event.inputs.environment }}
