@@ -12,9 +12,3 @@ variable "key_vault_name" {
   description = "Nom du Key Vault (doit être unique dans Azure)"
   type        = string
 }
-
-variable "allowed_ip_ranges" {
-  description = "Liste des IPs autorisées à accéder au Key Vault (CIDR)"
-  type        = list(string)
-  default     = []
-}

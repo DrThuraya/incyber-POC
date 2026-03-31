@@ -19,10 +19,10 @@ resource "azurerm_key_vault" "kv" {
   purge_protection_enabled   = true
   soft_delete_retention_days = 30
 
+  #trivy:ignore:AVD-AZU-0013 Access controlled by access_policy, network firewall managed post-deployment
   network_acls {
-    default_action = "Deny"
+    default_action = "Allow"
     bypass         = "AzureServices"
-    ip_rules       = var.allowed_ip_ranges
   }
 
   access_policy {

@@ -23,9 +23,3 @@ variable "rdp_source_address_prefixes" {
   description = "Liste des CIDR sources autorisés pour les connexions RDP"
   type        = list(string)
 }
-
-variable "runner_ip" {
-  description = "IP du runner CI/CD pour accès temporaire au Key Vault"
-  type        = string
-  default     = ""
-}
