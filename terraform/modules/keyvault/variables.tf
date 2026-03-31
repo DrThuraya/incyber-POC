@@ -8,8 +8,7 @@ variable "resource_group_name" {
   type        = string
 }
 
-variable "rdp_source_address_prefixes" {
-  description = "Liste des CIDR sources autorisés pour les connexions RDP"
-  type        = list(string)
-  default     = []
+variable "key_vault_name" {
+  description = "Nom du Key Vault (doit être unique dans Azure)"
+  type        = string
 }
