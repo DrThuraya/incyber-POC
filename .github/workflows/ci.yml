@@ -69,7 +69,7 @@ jobs:
         working-directory: terraform/environments/${{ github.event.inputs.environment || 'dev' }}
 
       - name: Trivy - Security Scan
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.30.0
         with:
           scan-type: 'config'
           scan-ref: 'terraform/'
