@@ -12,10 +12,10 @@ provider "azurerm" {
 }
 
 module "network" {
-  source                    = "../../modules/network"
-  location                  = var.location
-  resource_group_name       = var.resource_group_name
-  rdp_source_address_prefix = var.rdp_source_address_prefix
+  source                      = "../../modules/network"
+  location                    = var.location
+  resource_group_name         = var.resource_group_name
+  rdp_source_address_prefixes = var.rdp_source_address_prefixes
 }
 
 module "keyvault" {
